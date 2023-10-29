@@ -69,13 +69,13 @@ if __name__ == '__main__':
     batch_size = 8
     folds = 3
     model_checkpoint = "xlm-roberta-large"  # "cointegrated/rubert-tiny"
-    checkpoint_path = 'outputs/checkpoint-12500'
+    checkpoint_path = 'pretrain_models/checkpoint-19500'
     
     tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
     metric = load_metric("seqeval")
     ner_data = preprocess_data("data/ner_data_train.csv")
     
-    ner_val_train, ner_test = train_test_split(ner_data, test_size=0.1, random_state=1)
+    ner_val_train, ner_test = train_test_split(ner_data, test_size=0.2, random_state=1)
     kf = KFold(n_splits=folds, random_state=1, shuffle=True)
     ner_val_train = np.array(ner_val_train)
     
@@ -93,7 +93,7 @@ if __name__ == '__main__':
 
         tokenized_datasets = ner_data.map(tokenize_and_align_labels, batched=True)
 
-        model = AutoModelForTokenClassification.from_pretrained(checkpoint_path, num_labels=len(label_list))
+        model = AutoModelForTokenClassification.from_pretrained(model_checkpoint, num_labels=len(label_list))
         model.config.id2label = dict(enumerate(label_list))
         model.config.label2id = {v: k for k, v in model.config.id2label.items()}
 
@@ -103,7 +103,7 @@ if __name__ == '__main__':
             param.requires_grad = True
 
         args = TrainingArguments(
-            f"ner-19500-{fold}",
+            f"ner-v2-{fold}",
             evaluation_strategy = "epoch",
             learning_rate=1e-5,
             per_device_train_batch_size=batch_size,
@@ -115,8 +115,8 @@ if __name__ == '__main__':
             # gradient_accumulation_steps=2,
             # eval_accumulation_steps=2,
             # max_grad_norm=2,
-            warmup_ratio=0.1,
-            metric_for_best_model="loss"
+            warmup_ratio=0.2,
+            metric_for_best_model="f1"
 
         )
 

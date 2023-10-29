@@ -1,6 +1,7 @@
 import os
+import random
 from glob import glob
-os.environ['CUDA_VISIBLE_DEVICES'] = '3,4,6'
+os.environ['CUDA_VISIBLE_DEVICES'] = '8'
 
 import torch
 import transformers
@@ -18,9 +19,15 @@ transformers.logging.set_verbosity_info()
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 if __name__ == '__main__':
-        
+    with open('data/rutube_descriptions_v3.txt', 'r') as f:
+        data = [row.strip() for row in f.readlines()]
+    random.shuffle(data)
     train_filenames_mask = 'data/train_shuffle_descriptions_mlm_v2.txt'
     val_filenames_mask = 'data/val_shuffle_descriptions_mlm_v2.txt'
+    with open(train_filenames_mask, 'w') as f:
+        f.write('\n'.join(data[:50000]))
+    with open(val_filenames_mask, 'w') as f:
+        f.write('\n'.join(data[50000:60000]))
     pretrained_path = 'xlm-roberta-large'
     check_path = 'outputs/checkpoint-19500'
     max_length = 256
@@ -35,7 +42,7 @@ if __name__ == '__main__':
     if local_rank in {0, -1}:
         tokenizer.save_pretrained(os.path.join(log_dir, 'model', 'tokenizer'))
 
-    model = AutoModelForMaskedLM.from_pretrained(check_path)
+    model = AutoModelForMaskedLM.from_pretrained(pretrained_path)
     model.tie_weights()
     model = model.to(device)
     # model = torch.compile(model)

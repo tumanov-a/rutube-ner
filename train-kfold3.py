@@ -69,17 +69,19 @@ if __name__ == '__main__':
     batch_size = 8
     folds = 3
     model_checkpoint = "xlm-roberta-large"  # "cointegrated/rubert-tiny"
-    checkpoint_path = 'outputs/checkpoint-12500'
+    checkpoint_path = 'outputs/checkpoint-6250'
     
     tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
     metric = load_metric("seqeval")
     ner_data = preprocess_data("data/ner_data_train.csv")
     
-    ner_val_train, ner_test = train_test_split(ner_data, test_size=0.1, random_state=1)
+    ner_val_train, ner_test = train_test_split(ner_data, test_size=0.2, random_state=1)
     kf = KFold(n_splits=folds, random_state=1, shuffle=True)
     ner_val_train = np.array(ner_val_train)
     
     for fold, (train_index, val_index) in enumerate(kf.split(ner_val_train)):
+        # if fold == 0:
+            # continue/
         ner_train = ner_val_train[train_index].tolist()
         ner_val = ner_val_train[val_index].tolist()
         
@@ -103,12 +105,12 @@ if __name__ == '__main__':
             param.requires_grad = True
 
         args = TrainingArguments(
-            f"ner-19500-{fold}",
+            f"ner-v3-{fold}",
             evaluation_strategy = "epoch",
             learning_rate=1e-5,
             per_device_train_batch_size=batch_size,
             per_device_eval_batch_size=batch_size,
-            num_train_epochs=5,
+            num_train_epochs=3,
             save_strategy='epoch',
             report_to='tensorboard',
             load_best_model_at_end=True,
@@ -117,7 +119,6 @@ if __name__ == '__main__':
             # max_grad_norm=2,
             warmup_ratio=0.1,
             metric_for_best_model="loss"
-
         )
 
         trainer = Trainer(
