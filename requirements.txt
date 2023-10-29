@@ -1,0 +1,8 @@
+razdel==0.5.0
+transformers==4.24.0
+scikit-learn==0.24.2
+datasets==2.4.0
+pandas==1.1.5
+torch==1.7.9
+spacy
+seqeval==1.2.2
